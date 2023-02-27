@@ -457,6 +457,9 @@ class SessionsManager:
             self = SessionsManager.instance
         else:
             SessionsManager.instance = self
+            
+    def __getitem__(self, id: int) -> Session:
+        return self.ids[id]
 
     def launch_session(self, id: int):
         """
@@ -554,3 +557,7 @@ class SessionsManager:
         if session.max_clients == len(session.clients):
             return True
         return False
+
+
+class Bot:
+    ...
