@@ -1,0 +1,9 @@
+numpy
+pandas
+finta
+websockets
+fastapi
+uvicorn
+pika
+yfinance
+yahoo_fin
