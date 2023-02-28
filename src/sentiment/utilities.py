@@ -1,8 +1,9 @@
 import requests
 import re
 from bs4 import BeautifulSoup
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Any
 from datetime import datetime
+from abc import ABC, abstractmethod
 
 import pandas as pd
 import snscrape.modules.twitter as sntwitter
@@ -14,6 +15,15 @@ def get_sentiments(string: str):
 #---------------NEWS------------------------#
 
 def search_for_stock_news_links(ticker: str) -> List[str]:
+    """
+    Search for news links related to a specific stock ticker on Yahoo Finance.
+
+    Parameters:
+    ticker (str): The stock ticker to search for news links.
+
+    Returns:
+    List[str]: A list of URLs linking to news articles related to the specified stock ticker.
+    """
     search_url = 'https://www.google.com/search?q=yahoo+finance+{}&tbm=nws'.format(ticker)
     r = requests.get(search_url)
     soup = BeautifulSoup(r.text, 'html.parser')
@@ -23,6 +33,20 @@ def search_for_stock_news_links(ticker: str) -> List[str]:
 
 
 def strip_unwanted_urls(urls: List[str], exclude_list: List[str], limit: int) -> List[str]:
+    """
+    Return a list of cleaned URLs from a list of URLs by stripping unwanted URLs.
+
+    Args:
+        urls (List[str]): A list of URLs to be cleaned.
+        exclude_list (List[str]): A list of strings representing keywords to be excluded.
+        limit (int): An integer representing the maximum number of cleaned URLs to return.
+
+    Returns:
+        List[str]: A list of cleaned URLs.
+
+    Raises:
+        None
+    """
     val = []
     for url in urls:
         if 'https://' in url and not any(exc in url for exc in exclude_list):
@@ -33,6 +57,24 @@ def strip_unwanted_urls(urls: List[str], exclude_list: List[str], limit: int) ->
 
 
 def scrape_and_process(urls: List[str])  -> List[str]:
+    """
+    Scrape the text from the first 350 words of each URL in a list of URLs and return them as a list of strings.
+
+    Parameters
+    ----------
+    urls : list of str
+        A list of URLs to scrape and process.
+
+    Returns
+    -------
+    list of str
+        A list of strings, where each string is the text of the first 350 words of a URL.
+
+    Raises
+    ------
+    requests.exceptions.RequestException
+        If there is an error retrieving a URL.
+    """
     articles = []
     for url in urls:
         r = requests.get(url)
@@ -46,6 +88,20 @@ def scrape_and_process(urls: List[str])  -> List[str]:
 
 
 def summarize(articles: List[str], tokenizer, model) -> List[str]:
+    """
+    Summarizes a list of articles using a pre-trained transformer model and tokenizer.
+
+    Args:
+        articles (List[str]): A list of strings representing the articles to be summarized.
+        tokenizer: The tokenizer object used to tokenize the input articles.
+        model: The transformer model used to generate the summaries.
+
+    Returns:
+        List[str]: A list of strings representing the summaries of the input articles.
+
+    Raises:
+        None
+    """
     summaries = []
     for article in articles:
         input_ids = tokenizer.encode(article, return_tensors="pt")
@@ -58,6 +114,36 @@ def summarize(articles: List[str], tokenizer, model) -> List[str]:
 def get_news_df(ticker: str, summaries: List[str],
                 scores: Dict[str, Union[str, float]],
                 urls: List[str], articles: List[str]) -> pd.DataFrame:
+    """
+    Create a Pandas DataFrame containing news data.
+
+    Parameters
+    ----------
+    ticker : str
+        The ticker symbol of the company associated with the news articles.
+    summaries : list of str
+        A list of article summary texts.
+    scores : dict
+        A dictionary containing sentiment scores for each article.
+        The keys are strings containing the article labels ('positive', 'negative', or 'neutral'),
+        and the values are floats representing the corresponding sentiment scores.
+    urls : list of str
+        A list of URLs linking to the full news articles.
+    articles : list of str
+        A list of full news article texts.
+
+    Returns
+    -------
+    pd.DataFrame
+        A Pandas DataFrame containing the news data.
+        The DataFrame has the following columns:
+            - ticker: The ticker symbol of the company.
+            - url: The URL of the full news article.
+            - text: The full text of the news article.
+            - summary: The summary text of the news article.
+            - sentiment: The sentiment label associated with the article ('positive', 'negative', or 'neutral').
+            - score: The sentiment score associated with the article.
+    """
     output = []
     for i in range(len(summaries)):
         row = [
@@ -76,6 +162,24 @@ def get_news_df(ticker: str, summaries: List[str],
 
 
 def get_tweets(ticker: str, limit: int) -> List[List[datetime, str]]:
+    """
+    Get a list of English tweets related to a stock ticker within a specific time period.
+    
+    Parameters:
+    ticker (str): A stock ticker symbol to search for tweets.
+    limit (int): Maximum number of tweets to return.
+    
+    Returns:
+    List[List[datetime, str]]: A list of tweets containing the datetime of each tweet and its content as a string.
+    
+    Example:
+    >>> get_tweets("AAPL", 100)
+    [[datetime.datetime(2023, 2, 27, 23, 59, 59), "Just bought some shares of AAPL. Excited to see where it goes!"],
+     [datetime.datetime(2023, 2, 26, 12, 34, 56), "AAPL just announced a new product lineup. Can't wait to see what's in store!"],
+     [datetime.datetime(2023, 2, 24, 9, 0, 1), "Sold all my shares of AAPL today. Time to move on to something else."],
+     ...
+    ]
+    """
     tweets_generator = sntwitter.TwitterSearchScraper(f"{ticker} since:2023-02-10 until:2023-02-28").get_items()
         
     tweets = []
@@ -89,3 +193,44 @@ def get_tweets(ticker: str, limit: int) -> List[List[datetime, str]]:
 
 def get_tweets_df():
     ...
+    
+    
+class Pipeline(ABC):
+    """
+    Abstract base class for defining data pipelines.
+    
+    Parameters
+    ----------
+    None
+    
+    Attributes
+    ----------
+    None
+    
+    Methods
+    -------
+    __call__(*args, **kwds)
+        Abstract method to define the pipeline logic.
+        
+    run()
+        Abstract method to run the pipeline.
+        
+    Raises
+    ------
+    NotImplementedError
+        If any of the abstract methods are not implemented in a subclass.
+        
+    Returns
+    -------
+    Any
+        Depending on the implementation of the `__call__` method.
+    """
+    @abstractmethod
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        ...
+    
+    @abstractmethod
+    def run(self):
+        ...
+        
+        
