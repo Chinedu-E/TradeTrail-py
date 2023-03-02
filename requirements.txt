@@ -10,3 +10,6 @@ yahoo_fin
 transformers
 joblib
 torch
+pymongo
+sentencepiece
+openai
