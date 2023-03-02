@@ -1,12 +1,13 @@
-from helpers import Bot, Transaction
+from helpers import Bot, Transaction, Session
 import pandas as pd
 import yfinance as yf 
 from finta import TA
 import websockets
 import joblib
 from dataclasses import asdict
-from ..trading import utilities
+import utilities
 import concurrent.futures as cf
+from decouple import config
 
 
 def spawn_bots(n: int, symbol: str):
@@ -15,8 +16,8 @@ def spawn_bots(n: int, symbol: str):
 
 class Trader(Bot):
     
-    def __init__(self, symbol: str):
-        self.symbol = symbol
+    def __init__(self, session: Session):
+        self.session = session
         self.is_connected = False
         self.model = joblib.load('xgboost_model.joblib')
         self.scaler = joblib.load('scaler.joblib')
@@ -27,7 +28,7 @@ class Trader(Bot):
         trader.connect()
         
     async def connect(self):
-        async with websockets.connect("") as websocket:
+        async with websockets.connect(f"ws://localhost:{config('PORT')}/ws/join?session_id={self.session.id}&client_id=-1") as websocket:
             async for message in websocket:
                 try:
                     price = float(str(message, encoding="utf-8"))

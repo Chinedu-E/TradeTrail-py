@@ -13,3 +13,4 @@ torch
 pymongo
 sentencepiece
 openai
+python-decouple
