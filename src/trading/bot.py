@@ -10,9 +10,9 @@ import concurrent.futures as cf
 from decouple import config
 
 
-def spawn_bots(n: int, symbol: str):
+def spawn_bots(n: int, session: Session):
     with cf.ThreadPoolExecutor(max_workers=n) as executor:
-        executor.map(Trader.start_bot, symbol)
+        executor.map(Trader.start_bot, session)
 
 class Trader(Bot):
     
@@ -38,7 +38,7 @@ class Trader(Bot):
                     break
         
     def execute(self, price):
-        df = yf.download(self.symbol, interval="1m", period="1d")
+        df = yf.download(self.session.symbol, interval="1m", period="1d")
         df['SMA'] = TA.SMA(df, 30)
         df['RSI'] = TA.RSI(df)
         df['OBV'] = TA.OBV(df)

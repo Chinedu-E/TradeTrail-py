@@ -33,7 +33,7 @@ async def create_session(websocket: WebSocket, host_id: int, symbol:str, id: int
     
     if against_server:
         num_bots = max_clients - 1
-        spawn_bots(num_bots)
+        spawn_bots(num_bots, session)
     
     while True:
         if session_manager.is_session_full(session.id):
