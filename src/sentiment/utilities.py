@@ -6,6 +6,7 @@ from datetime import datetime
 from abc import ABC, abstractmethod
 
 import pandas as pd
+import pymongo
 import snscrape.modules.twitter as sntwitter
 
 
@@ -81,7 +82,7 @@ def scrape_and_process(urls: List[str])  -> List[str]:
         soup = BeautifulSoup(r.text, 'html.parser')
         results = soup.find_all('p')
         text = [res.text for res in results]
-        words = ' '.join(text).split(' ')[:350]
+        words = ' '.join(text).split(' ')[:320]
         article = ' '.join(words)
         articles.append(article)
     return articles
@@ -161,7 +162,7 @@ def get_news_df(ticker: str, summaries: List[str],
 #-------------TWEETS--------------------#
 
 
-def get_tweets(ticker: str, limit: int) -> List[List[datetime, str]]:
+def get_tweets(ticker: str, limit: int) -> List[List]:
     """
     Get a list of English tweets related to a stock ticker within a specific time period.
     
@@ -215,6 +216,9 @@ class Pipeline(ABC):
     run()
         Abstract method to run the pipeline.
         
+    connect_to_database()
+        Abstract method to connect to a database
+        
     Raises
     ------
     NotImplementedError
@@ -233,4 +237,6 @@ class Pipeline(ABC):
     def run(self):
         ...
         
-        
+    @abstractmethod
+    def connect_to_database(self):
+        ...    
