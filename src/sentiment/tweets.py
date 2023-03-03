@@ -7,7 +7,7 @@ from decouple import config
 import pymongo
 import pandas as pd
 from transformers import pipeline
-from utilities import Pipeline, get_tweets
+from sentiment.utilities import Pipeline, get_tweets
 
 
 class TwitterPipeline(Pipeline):
@@ -55,8 +55,7 @@ class TwitterPipeline(Pipeline):
             self.connect_to_database()
     
     def connect_to_database(self):
-        self.client = pymongo.MongoClient(f"mongodb+srv://{config('MONGO_USER')}:{config('MONGO_PASS')}\
-                                          @cluster0.rvb4tg8.mongodb.net/?retryWrites=true&w=majority")
+        self.client = pymongo.MongoClient(f"mongodb+srv://{config('MONGO_USER')}:{config('MONGO_PASS')}@cluster0.rvb4tg8.mongodb.net/?retryWrites=true&w=majority")
         self.db = self.client[self.db_name]
         self.collection = self.db[self.collection_name]
     
@@ -100,6 +99,7 @@ class TwitterPipeline(Pipeline):
         scores = sentiment(list(df["Tweet"].values))
         df["Sentiment"] = [scores[i]["label"] for i in range(len(scores))]
         df["Score"] = [scores[i]["score"] for i in range(len(scores))]
+        df["ticker"] = [ticker] * len(scores)
         return df
     
     def __call__(self, ticker: str) ->List[Dict[str, Any]]:
@@ -120,7 +120,7 @@ class TwitterPipeline(Pipeline):
                         - score: The sentiment score associated with the article.
         """
         query = {"ticker": ticker}
-        docs = self.collection.find(query)
+        docs = self.collection.find(query, {"_id": 0})
         docs = [doc for doc in docs]
         return docs
     

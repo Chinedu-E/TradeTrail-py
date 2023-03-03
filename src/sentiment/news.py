@@ -11,7 +11,7 @@ import pymongo
 from transformers import pipeline
 from transformers import PegasusTokenizer, PegasusForConditionalGeneration
 
-from utilities import Pipeline, search_for_stock_news_links, strip_unwanted_urls, scrape_and_process, summarize, get_news_df
+from sentiment.utilities import Pipeline, search_for_stock_news_links, strip_unwanted_urls, scrape_and_process, summarize, get_news_df
 
 
 class NewsPipeline(Pipeline):
@@ -89,13 +89,12 @@ class NewsPipeline(Pipeline):
                         - score: The sentiment score associated with the article.
         """
         query = {"ticker": ticker}
-        docs = self.collection.find(query)
+        docs = self.collection.find(query, {"_id": 0})
         docs = [doc for doc in docs]
         return docs
     
     def connect_to_database(self):
-        self.client = pymongo.MongoClient(f"mongodb+srv://{config['MONGO_USER']}:{config['MONGO_PASS']}\
-                                          @cluster0.rvb4tg8.mongodb.net/?retryWrites=true&w=majority")
+        self.client = pymongo.MongoClient(f"mongodb+srv://{config('MONGO_USER')}:{config('MONGO_PASS')}@cluster0.rvb4tg8.mongodb.net/?retryWrites=true&w=majority")
         self.db = self.client[self.db_name]
         self.collection = self.db[self.collection_name]
         
