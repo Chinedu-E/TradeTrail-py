@@ -3,7 +3,7 @@ import websockets
 import joblib
 import json
 from dataclasses import asdict
-import utilities
+import trading.utilities as utilities
 import concurrent.futures as cf
 from decouple import config
 
