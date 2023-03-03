@@ -1,9 +1,7 @@
 from helpers import Bot, Transaction, Session
-import pandas as pd
-import yfinance as yf 
-from finta import TA
 import websockets
 import joblib
+import json
 from dataclasses import asdict
 import utilities
 import concurrent.futures as cf
@@ -19,6 +17,7 @@ class Trader(Bot):
     def __init__(self, session: Session):
         self.session = session
         self.is_connected = False
+        self.num_trades = 0
         self.model = joblib.load('xgboost_model.joblib')
         self.scaler = joblib.load('scaler.joblib')
     
@@ -28,7 +27,9 @@ class Trader(Bot):
         trader.connect()
         
     async def connect(self):
-        async with websockets.connect(f"ws://localhost:{config('PORT')}/ws/join?session_id={self.session.id}&client_id=-1") as websocket:
+        async with websockets.connect(f"ws://localhost:{config('PORT')}/ws/join?\
+                                      session_id={self.session.id}&client_id=-1&is_agent=true")\
+                                      as websocket:
             async for message in websocket:
                 try:
                     price = float(str(message, encoding="utf-8"))
@@ -38,21 +39,16 @@ class Trader(Bot):
                     break
         
     def execute(self, price):
-        df = yf.download(self.session.symbol, interval="1m", period="1d")
-        df['SMA'] = TA.SMA(df, 30)
-        df['RSI'] = TA.RSI(df)
-        df['OBV'] = TA.OBV(df)
-        df["KAMA"] = TA.KAMA(df)
-        df["ROC"] = TA.ROC(df, 30)
-        df.fillna(0, inplace=True)
-        df= df[utilities.PREDICTORS]
+        df = utilities.form_features(self.session.symbol)
         df = self.scaler.transform(df)
         pred = self.model.predict(df)[-1]
+        # TODO: Add noise to predictions
         if pred == 1:
-            t = Transaction("buy", 1.0, price)
+            transaction = Transaction("buy", 1.0, price)
         else:
-            t = Transaction("sell", 1.0, price)
+            transaction = Transaction("sell", 1.0, price)
         
-        out = str(asdict(t))
+        trade = json.dumps(asdict(transaction))
         
-        return out
+        self.num_trades += 1
+        return trade
