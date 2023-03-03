@@ -1,0 +1,17 @@
+name: Run Python script every weekday at 5pm
+on:
+  schedule:
+    - cron: "0 17 * * 1-5" # runs at 5pm every weekday (Monday to Friday)
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+    - name: Setup Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+    - name: Run script
+      run: python src/producers/daily_prices.py
