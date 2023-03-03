@@ -12,7 +12,7 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 # Copy the rest of the application code to the container
 COPY . ./app
 
-RUN cd /app/src
+WORKDIR /app/src
 # Expose port 5000 for the FastAPI application
 EXPOSE 5050
 
