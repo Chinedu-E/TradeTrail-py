@@ -52,8 +52,11 @@ class TwitterPipeline(Pipeline):
         df["Score"] = [scores[i]["score"] for i in range(len(scores))]
         return df
     
-    def __call__(self):
-        return super().__call__()
+    def __call__(self, ticker: str):
+        query = {"ticker": ticker}
+        docs = self.collection.find(query)
+        docs = [doc for doc in docs]
+        return docs
     
     
     
