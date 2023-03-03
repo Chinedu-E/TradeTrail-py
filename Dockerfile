@@ -12,8 +12,9 @@ RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt
 # Copy the rest of the application code to the container
 COPY . ./app
 
+RUN cd /app/src
 # Expose port 5000 for the FastAPI application
 EXPOSE 5050
 
 # Set the command to run when the container starts
-CMD ["uvicorn", "app.src.app:app", "--host", "0.0.0.0", "--port", "5050"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5050"]
