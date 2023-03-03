@@ -17,4 +17,4 @@ EXPOSE 5050
 
 WORKDIR /app/src
 # Set the command to run when the container starts
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5050"]
+CMD ["uvicorn", "app.src.app:app", "--host", "0.0.0.0", "--port", "5050"]
