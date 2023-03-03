@@ -2,16 +2,12 @@ import requests
 import re
 from bs4 import BeautifulSoup
 from typing import List, Dict, Union, Any
-from datetime import datetime
 from abc import ABC, abstractmethod
 
 import pandas as pd
-import pymongo
 import snscrape.modules.twitter as sntwitter
 
 
-def get_sentiments(string: str):
-    ...
 
 #---------------NEWS------------------------#
 
@@ -187,14 +183,15 @@ def get_tweets(ticker: str, limit: int) -> List[List]:
     for tweet in tweets_generator:
         if len(tweets) == limit:
             break
-        if tweet.lang == "en" and tweets[-1] != tweet.rawContent:
-            tweets.append([tweet.date, tweet.rawContent])
+        if tweet.lang == "en":
+            if len(tweets) > 0 and tweets[-1] != tweet.rawContent:
+                tweets.append([tweet.date, tweet.rawContent])
+            else:
+                tweets.append([tweet.date, tweet.rawContent])
     return tweets
 
-
-def get_tweets_df():
-    ...
     
+#----------------------------------#
     
 class Pipeline(ABC):
     """
