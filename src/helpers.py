@@ -5,6 +5,7 @@ import time
 import random
 from typing import Union, Literal, List, Any, Dict
 from dataclasses import dataclass, asdict
+from abc import ABC, abstractmethod
 
 from fastapi.websockets import WebSocket
 
@@ -323,6 +324,7 @@ class ParticipantSession:
             The websocket object to send the data to.
     """
     starting_balance: float
+    is_agent: bool
     num_trades: int = 0
     available_shares: float = 0
     balance: float = 0
@@ -559,5 +561,5 @@ class SessionsManager:
         return False
 
 
-class Bot:
+class Bot(ABC):
     ...
