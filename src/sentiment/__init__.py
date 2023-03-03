@@ -1,2 +1,2 @@
-from news import NewsPipeline
-from tweets import TwitterPipeline
+from .news import NewsPipeline
+from .tweets import TwitterPipeline
