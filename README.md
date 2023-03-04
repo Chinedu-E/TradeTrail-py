@@ -37,7 +37,11 @@ The company logos are saved in a Firebase database, news and tweets are saved in
 - Railway
 ## Installation
 ---
+To install the platform, follow these steps:
 
+1. Clone the repository: `git clone https://github.com/Chinedu-E/TradeTrail-py.git`
+2. Install the dependencies: `pip install -r requirements.txt`
+3. Run the app: `uvicorn src.app:app`
 ## Conclusion
 ---
 This trading platform is a comprehensive solution for users who want to automate their investments, trade against other users and bots, and analyze market sentiment. With its advanced modules and game feature, the platform is designed to provide a fun and engaging trading experience while helping users achieve their investment goals.
