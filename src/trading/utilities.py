@@ -23,7 +23,7 @@ def form_features(ticker: str, df: pd.DataFrame = None):
 def get_data(symbol: str):
     main_df = pd.DataFrame()
     for i in reversed(range(1, 3)):
-        CSV_URL = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval=1min&slice=year2month{i}&apikey=6NKDJJHC3N1HXZ5V'
+        CSV_URL = f'https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={symbol}&interval=1min&slice=year2month{i}&apikey='
         with requests.Session() as s:
             download = s.get(CSV_URL)
             decoded_content = download.content.decode('utf-8')
