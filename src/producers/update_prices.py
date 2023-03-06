@@ -34,6 +34,8 @@ def main():
             if now.hour == 9 and now.minute < 0:
                 continue
             send_prices()
+        elif now.hour >= 16:
+            break
         else:
             time.sleep(60)
     
