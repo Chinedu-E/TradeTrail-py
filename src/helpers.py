@@ -9,6 +9,7 @@ from typing import Union, Literal, List, Any, Dict
 from dataclasses import dataclass, asdict
 import csv
 from abc import ABC, abstractmethod
+from functools import lru_cache
 
 from fastapi.websockets import WebSocket
 import yfinance as yf
@@ -577,11 +578,12 @@ class TrainingDataHandler:
     def __next__(self):
         ...
         
-    def __getitem__(self, mode: str):
+    def __getitem__(self, mode: str) -> pd.DataFrame:
         ...
     
     @staticmethod
-    def get_clustering_data(column:  Union[str, List[str]]):
+    @lru_cache
+    def get_clustering_data(column:  Union[str, List[str]]) -> pd.DataFrame:
         tickers  = stock_info.tickers_sp500()
         start = datetime.datetime(2015, 1, 1)
         end = datetime.datetime.now()
@@ -589,26 +591,26 @@ class TrainingDataHandler:
         df = df[column]
         return df
         
-      
-    def get_trading_data(self, ticker: str):
+    @lru_cache
+    def get_trading_data(self, ticker: str) -> pd.DataFrame:
         main_df = pd.DataFrame()
         for year in [1, 2]:
             for i in reversed(range(1, 13)):
-                if i == 6:
-                    time.sleep(65)
-                CSV_URL = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={ticker}&interval=1min&slice=year{year}month{i}&apikey={config('ALPHA_API')}"
+                if i % 2 == 0:
+                    time.sleep(25)
+                csv_url = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={ticker}&interval=1min&slice=year{year}month{i}&apikey={config('ALPHA_API')}"
                 with requests.Session() as s:
-                    download = s.get(CSV_URL)
+                    download = s.get(csv_url)
                     decoded_content = download.content.decode('utf-8')
                     cr = csv.reader(decoded_content.splitlines(), delimiter=',')
                     my_list = list(cr)
                     df = pd.DataFrame(my_list[1:], columns=my_list[0])
                 main_df = pd.concat([df, main_df])
-                time.sleep(0.1)
+                time.sleep(1)
         return main_df
     
         
-    def get_portfolio_allocation_data(self):
+    def get_portfolio_allocation_data(self, tickers: List[str]) -> pd.DataFrame:
         ...
         
         
