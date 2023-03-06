@@ -9,9 +9,13 @@ from helpers import Participant, ParticipantSession, SessionsManager, Session
 from producers import spawn_channel
 from trading import spawn_bots
 from sentiment import NewsPipeline, TwitterPipeline
+from clustering import StocksCluster
 
 CHANNEL_NAME = "session"
+
 app = FastAPI()
+
+stock_cluster = StocksCluster()
 session_manager = SessionsManager()
 twitter_pipeline = TwitterPipeline()
 news_pipeline = NewsPipeline()
@@ -22,12 +26,21 @@ news_pipeline = NewsPipeline()
 async def health_check():
     return "Server running"
 
+
+@app.get("/similar")
+async def get_similar(ticker: str, limit: int):
+    response = {}
+    response["stocks"] = stock_cluster(ticker=ticker, n=limit)
+    return response
+
+
 @app.get("/sentiment")
-def get_sentiment(ticker: str):
+async def get_sentiment(ticker: str):
     response = {}
     response["twitter"] = twitter_pipeline(ticker=ticker)
     response["news"] = news_pipeline(ticker=ticker)
     return response
+
 
 @app.websocket("/ws/create")
 async def create_session(websocket: WebSocket, host_id: int, symbol:str, id: int,
@@ -60,8 +73,7 @@ async def create_session(websocket: WebSocket, host_id: int, symbol:str, id: int
     channel.basic_publish(exchange='',
                           routing_key=CHANNEL_NAME,
                           body=json.dumps(asdict(session_participant)))
-        
-        
+            
     
 @app.websocket("/ws/join")
 async def join_session(websocket: WebSocket, session_id: int, client_id: int, is_agent: bool):
