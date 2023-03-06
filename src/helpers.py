@@ -2,12 +2,19 @@ import asyncio
 import threading
 import logging
 import time
+import datetime
 import random
+import requests
 from typing import Union, Literal, List, Any, Dict
 from dataclasses import dataclass, asdict
+import csv
 from abc import ABC, abstractmethod
 
 from fastapi.websockets import WebSocket
+import yfinance as yf
+import pandas as pd
+from decouple import config
+from yahoo_fin import stock_info
 
 class DictParser:
     """
@@ -563,3 +570,47 @@ class SessionsManager:
 
 class Bot(ABC):
     ...
+    
+
+class TrainingDataHandler:
+    
+    def __next__(self):
+        ...
+        
+    def __getitem__(self, mode: str):
+        ...
+    
+    @staticmethod
+    def get_clustering_data(column:  Union[str, List[str]]):
+        tickers  = stock_info.tickers_sp500()
+        start = datetime.datetime(2015, 1, 1)
+        end = datetime.datetime.now()
+        df = yf.download(tickers, start=start, end=end)
+        df = df[column]
+        return df
+        
+      
+    def get_trading_data(self, ticker: str):
+        main_df = pd.DataFrame()
+        for year in [1, 2]:
+            for i in reversed(range(1, 13)):
+                if i == 6:
+                    time.sleep(65)
+                CSV_URL = f"https://www.alphavantage.co/query?function=TIME_SERIES_INTRADAY_EXTENDED&symbol={ticker}&interval=1min&slice=year{year}month{i}&apikey={config('ALPHA_API')}"
+                with requests.Session() as s:
+                    download = s.get(CSV_URL)
+                    decoded_content = download.content.decode('utf-8')
+                    cr = csv.reader(decoded_content.splitlines(), delimiter=',')
+                    my_list = list(cr)
+                    df = pd.DataFrame(my_list[1:], columns=my_list[0])
+                main_df = pd.concat([df, main_df])
+                time.sleep(0.1)
+        return main_df
+    
+        
+    def get_portfolio_allocation_data(self):
+        ...
+        
+        
+    def set_mode(self, mode):
+        ...
