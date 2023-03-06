@@ -4,6 +4,7 @@ import joblib
 import json
 from dataclasses import asdict
 import trading.utilities as utilities
+from clustering import StocksCluster
 import concurrent.futures as cf
 from decouple import config
 
@@ -18,8 +19,7 @@ class Trader(Bot):
         self.session = session
         self.is_connected = False
         self.num_trades = 0
-        self.model = joblib.load('xgboost_model.joblib')
-        self.scaler = joblib.load('scaler.joblib')
+        self.load_model_and_scaler()
     
     @staticmethod
     def start_bot(symbol: str):
@@ -27,8 +27,7 @@ class Trader(Bot):
         trader.connect()
         
     async def connect(self):
-        async with websockets.connect(f"ws://localhost:{config('PORT')}/ws/join?\
-                                      session_id={self.session.id}&client_id=-1&is_agent=true")\
+        async with websockets.connect(f"ws://localhost:{config('PORT')}/ws/join?session_id={self.session.id}&client_id=-1&is_agent=true")\
                                       as websocket:
             async for message in websocket:
                 try:
@@ -38,7 +37,7 @@ class Trader(Bot):
                 except websockets.ConnectionClosed:
                     break
         
-    def execute(self, price):
+    def execute(self, price) -> Transaction:
         df = utilities.form_features(self.session.symbol)
         df = self.scaler.transform(df)
         pred = self.model.predict(df)[-1]
@@ -52,3 +51,15 @@ class Trader(Bot):
         
         self.num_trades += 1
         return trade
+    
+    def load_model_and_scaler(self):
+        cluster = StocksCluster()
+        cluster_num = cluster.get_cluster_num(self.session.symbol)
+        self._load_model(cluster_num)
+        self._load_scaler(cluster_num)
+    
+    def _load_model(self, cluster_num: int):
+        ...
+    
+    def _load_scaler(self, cluster_num: int):
+        ...
