@@ -1,5 +1,5 @@
-from sentiment.news import NewsPipeline
-from sentiment.tweets import TwitterPipeline
+from .news import NewsPipeline
+from .tweets import TwitterPipeline
 
 
 if __name__ == "__main__":
