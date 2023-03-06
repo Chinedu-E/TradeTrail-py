@@ -73,7 +73,7 @@ def main():
     
     utilities.save_model(model=model, scaler=scaler, model_name=model_name,
                          bucket_name=BUCKET_NAME, db_name=DATABASE_NAME,
-                         collection_name=COLLECTION_NAME)
+                         collection_name=COLLECTION_NAME, metadata=metadata)
     logging.info("Saved Model")
     
     
