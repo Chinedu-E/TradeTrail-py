@@ -16,3 +16,4 @@ openai
 python-decouple
 scikit-learn
 snscrape
+matplotlib
