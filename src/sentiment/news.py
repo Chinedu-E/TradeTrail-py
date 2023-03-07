@@ -1,6 +1,7 @@
 import concurrent.futures as cf
 import logging
 import datetime
+import random
 from typing import List, Dict, Any
 
 
@@ -59,8 +60,6 @@ class NewsPipeline(Pipeline):
     collection_name = "news"
     summary_model_name = "human-centered-summarization/financial-summarization-pegasus"
     sentiment_model_name = "cardiffnlp/twitter-roberta-base-sentiment-latest"
-    model = PegasusForConditionalGeneration.from_pretrained(summary_model_name)
-    tokenizer = PegasusTokenizer.from_pretrained(summary_model_name)
     
     
     def __init__(self):
@@ -112,18 +111,26 @@ class NewsPipeline(Pipeline):
         None
 
         """
+        model = PegasusForConditionalGeneration.from_pretrained(self.summary_model_name)
+        tokenizer = PegasusTokenizer.from_pretrained(self.summary_model_name)
         tickers = stock_info.tickers_sp500()
+        tickers = random.choices(tickers, 100)
         with cf.ThreadPoolExecutor(max_workers=8) as executor:
-            results = executor.map(NewsPipeline.__get_ticker_news, tickers[:8])
-        for result in list(results):
-            records = result.to_dict(orient="records")
-            try:
-                self.collection.insert_many(records)
-            except Exception as e:
-                print(e)
+            results = executor.map(NewsPipeline.__get_ticker_news, tickers)
+            results  = [executor.submit(NewsPipeline.__get_ticker_news, ticker, model, tokenizer) for ticker in tickers]
+        
+        for future in cf.as_completed(results):
+            data = future.result()
+            if data is not None:
+                records = data.to_dict(orient="records")
+                try:
+                    self.collection.insert_many(records)
+                except Exception as e:
+                    print(e)
             
+
     @staticmethod
-    def __get_ticker_news(ticker: str) -> pd.DataFrame:
+    def __get_ticker_news(ticker: str, model, tokenizer) -> pd.DataFrame:
         """
         Scrape news articles related to a given stock ticker and extract summaries, sentiment scores,
         URLs, and articles using pre-trained models and functions.
@@ -131,6 +138,12 @@ class NewsPipeline(Pipeline):
         Parameters
         ----------
         ticker : str
+            The stock ticker to search news articles for.
+            
+        model : Any
+            The stock ticker to search news articles for.
+            
+        tokenizer : Any
             The stock ticker to search news articles for.
 
         Returns
@@ -144,7 +157,7 @@ class NewsPipeline(Pipeline):
         urls = search_for_stock_news_links(ticker)
         urls = strip_unwanted_urls(urls, exclude_list, limit=3)
         articles = scrape_and_process(urls)
-        summaries = summarize(articles, NewsPipeline.tokenizer, NewsPipeline.model)
+        summaries = summarize(articles, tokenizer, model)
         
         sentiment = pipeline("sentiment-analysis", model=NewsPipeline.sentiment_model_name)
         scores = sentiment(summaries)
