@@ -1,21 +1,21 @@
-from helpers import Bot, Transaction, Session
+import helpers
 import websockets
 import joblib
 import json
 from dataclasses import asdict
-import trading.utilities as utilities
+from . import utilities
 from clustering import StocksCluster
 import concurrent.futures as cf
 from decouple import config
 
 
-def spawn_bots(n: int, session: Session):
+def spawn_bots(n: int, session: helpers.Session):
     with cf.ThreadPoolExecutor(max_workers=n) as executor:
         executor.map(Trader.start_bot, session)
 
-class Trader(Bot):
+class Trader(helpers.Bot):
     
-    def __init__(self, session: Session):
+    def __init__(self, session: helpers.Session):
         self.session = session
         self.is_connected = False
         self.num_trades = 0
@@ -37,15 +37,15 @@ class Trader(Bot):
                 except websockets.ConnectionClosed:
                     break
         
-    def execute(self, price) -> Transaction:
+    def execute(self, price) -> helpers.Transaction:
         df = utilities.form_features(self.session.symbol)
         df = self.scaler.transform(df)
         pred = self.model.predict(df)[-1]
         # TODO: Add noise to predictions
         if pred == 1:
-            transaction = Transaction("buy", 1.0, price)
+            transaction = helpers.Transaction("buy", 1.0, price)
         else:
-            transaction = Transaction("sell", 1.0, price)
+            transaction = helpers.Transaction("sell", 1.0, price)
         
         trade = json.dumps(asdict(transaction))
         
