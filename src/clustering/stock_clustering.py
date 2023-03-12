@@ -1,17 +1,58 @@
 import pandas as pd
 import random
 from sklearn.cluster import KMeans
-from yahoo_fin import stock_info
-from typing import List, Literal
+from typing import List
 
-from .. import helpers
+import helpers
 
 #from helpers import TrainingDataHandler
 from . import utilities
 
 
 class StocksCluster:
+    """
+    A class for clustering and selecting stocks based on market data.
     
+    Attributes
+    ----------
+    n_clusters: int
+        The number of clusters to use for stock clustering.
+
+    Methods
+    -------
+    __init__():
+        Initializes the class and loads the clustering data, or creates a new clustering model
+        if no saved data is found.
+        
+    __call__(ticker: str, n: int) -> List[str]:
+        Returns a list of n stocks, including the stock with the specified ticker, and other
+        stocks from the same cluster or sector. If there are not enough stocks in the same cluster
+        or sector, random stocks from other clusters are added.
+        
+    run_cluster():
+        Trains a clustering model on market data and saves the model to a json file.
+        
+    get_diverse_portfolio(n: int) -> List[str]:
+        Returns a list of n stocks randomly selected from different clusters.
+        
+    get_similar_portfolio(n: int) -> List[str]:
+        Returns a list of n stocks from the same cluster as a randomly selected stock.
+        
+    __load_cluster():
+        Loads saved clustering data from a json file.
+        
+    cluster_from_stock(ticker: str) -> int:
+        Returns the cluster number for a given stock, based on the saved clustering model.
+        
+    stocks_from_cluster(cluster: int) -> List[str]:
+        Returns a list of stocks from the specified cluster, selected randomly.
+        
+    sample() -> int:
+        Returns a randomly selected cluster number.
+        
+    stocks_from_similar_sector(ticker: str) -> List[str]:
+        Returns a list of stocks from the same sector as a given stock.
+    """
     def __init__(self):
         try:
             self.__load_cluster()
@@ -42,7 +83,7 @@ class StocksCluster:
         
     def get_diverse_portfolio(self, n: int) -> List[str]:
         
-        def get_stocks(stocks, limit, curr_quant):
+        def get_stocks(stocks: List[str], limit: int, curr_quant: int) -> List[str]:
             if curr_quant >= limit:
                 return stocks[:limit]
             clusters = random.choices(list(range(self.n_clusters)), k=4)
@@ -57,7 +98,7 @@ class StocksCluster:
         
     def get_similar_portfolio(self, n: int) -> List[str]:
         
-        def get_stocks(stocks, limit, curr_quant):
+        def get_stocks(stocks: List[str], limit: int, curr_quant: int) -> List[str]:
             if curr_quant >= limit:
                 return stocks[:limit]
             cluster_num = self.sample()
@@ -70,7 +111,7 @@ class StocksCluster:
         return stocks
     
     def __load_cluster(self):
-        self.cluster_df = pd.read_json("./src/clustering/cluster.json", orient="records")
+        self.cluster_df = pd.read_json("./clustering/cluster.json", orient="records")
         self.n_clusters = len(self.cluster_df["Cluster"].unique())
         
     def cluster_from_stock(self, ticker: str) -> int:
