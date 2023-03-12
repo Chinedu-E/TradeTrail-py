@@ -84,7 +84,19 @@ class DictParser:
         for i, field in enumerate(self.fields):
             pair = self._parse(field, string)
             if pair is not None:
-                out[pair[0]] = self.types[i](pair[1])
+                key, value = pair
+                try:
+                    correct_type = self.types[i](value)
+                    if self.types[i] == bool:
+                        if value.lower() == "true":
+                            correct_type = True
+                        elif value.lower() == "false":
+                            correct_type = False
+                        else:
+                            raise ValueError(f"Cannot convert {value} to python boolean")
+                    out[key] = correct_type
+                except Exception as e:
+                    print(e)
         return out
         
     def _parse(self, key: str, string: str) -> Union[str, Any]:
