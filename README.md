@@ -4,7 +4,6 @@ This repo is a supporting service for a trading platform that combines multiple 
 
 
 ## Modules
----
 ### Portfolio Allocation
 The portfolio allocation module automates user investments by calculating the optimal allocation of assets based on a user's risk tolerance, financial goals, and market conditions. This module is designed to help users achieve their investment objectives while minimizing risks.
 ### Trading
@@ -21,10 +20,8 @@ The testing module includes a comprehensive suite of tests to ensure the platfor
 The platform includes a "game" feature that allows users to compete against each other and trading bots in a simulated trading session. The winner is the user with the most profits at the end of the session. The game logic is implemented using FastAPI websockets, and the app.py file contains a sentiment GET endpoint to get sentiment, news, and tweets for a specific ticker.
 
 ## Deploymnent
----
 The company logos are saved in a Firebase database, news and tweets are saved in MongoDB cloud, and RabbitMQ is deployed on Amazon MQ. The platform is deployed using Docker on Railway, which is a platform as a service (PaaS) that makes it easy to deploy and manage containers.
 ## Technologies Used
----
 - Python
 - Go
 - Swift
@@ -36,12 +33,10 @@ The company logos are saved in a Firebase database, news and tweets are saved in
 - Docker
 - Railway
 ## Installation
----
 To install the platform, follow these steps:
 
 1. Clone the repository: `git clone https://github.com/Chinedu-E/TradeTrail-py.git`
 2. Install the dependencies: `pip install -r requirements.txt`
 3. Run the app: `uvicorn src.app:app`
 ## Conclusion
----
 This trading platform is a comprehensive solution for users who want to automate their investments, trade against other users and bots, and analyze market sentiment. With its advanced modules and game feature, the platform is designed to provide a fun and engaging trading experience while helping users achieve their investment goals.
