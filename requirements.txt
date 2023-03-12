@@ -18,3 +18,4 @@ scikit-learn
 snscrape
 matplotlib
 s3fs
+pytest
