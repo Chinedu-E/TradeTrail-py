@@ -1,5 +1,6 @@
 from typing import List, Dict, Any
 import tempfile
+from io import BytesIO
 
 import numpy as np
 import pandas as pd
@@ -7,6 +8,7 @@ import yfinance as yf
 from finta import TA
 import joblib
 import s3fs
+import boto3
 import pymongo
 from decouple import config
 
@@ -155,4 +157,29 @@ def save_model(model: Any, scaler: Any, model_name: str, bucket_name: str,
         collection.insert_one(metadata)
         
     
+def load_model(cluster: int, db_name: str, collection_name: str):
+    s3 = boto3.resource(
+            service_name='s3',
+            region_name='us-east-1',
+            aws_access_key_id = config('AWS_ACCESS_KEY_ID'),
+            aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY')
+            )
     
+    client = pymongo.MongoClient(f"mongodb+srv://{config('MONGO_USER')}:{config('MONGO_PASS')}@cluster0.rvb4tg8.mongodb.net/?retryWrites=true&w=majority")
+    db = client[db_name]
+    collection = db[collection_name]
+    query = {"Cluster": cluster}
+    docs = collection.find(query, {"_id": 0})
+    docs = [doc for doc in docs]
+    docs = sorted(docs, key=lambda d: d['Rundate'], reverse=True)
+    model_name = docs[0]["Name"]
+    scaler_name = f"models/{model_name}_scaler.joblib"
+    model_name = "models/"+model_name+".joblib"
+    
+    model_obj = s3.Object('tradetrail', model_name)
+    scaler_obj = s3.Object('tradetrail', scaler_name)
+    
+    model = joblib.load(BytesIO(model_obj.get()['Body'].read()))
+    scaler = joblib.load(BytesIO(scaler_obj.get()['Body'].read()))
+
+    return model, scaler
