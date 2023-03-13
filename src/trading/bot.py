@@ -1,6 +1,5 @@
 import helpers
 import websockets
-import joblib
 import json
 from dataclasses import asdict
 from . import utilities
@@ -54,12 +53,6 @@ class Trader(helpers.Bot):
     
     def load_model_and_scaler(self):
         cluster = StocksCluster()
-        cluster_num = cluster.get_cluster_num(self.session.symbol)
-        self._load_model(cluster_num)
-        self._load_scaler(cluster_num)
+        cluster_num = cluster.cluster_from_stock(self.session.symbol)
+        self.model, self.scaler = utilities.load_model(cluster=cluster_num, db_name="models", collection_name="trademodels")
     
-    def _load_model(self, cluster_num: int):
-        ...
-    
-    def _load_scaler(self, cluster_num: int):
-        ...
