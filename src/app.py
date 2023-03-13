@@ -50,7 +50,7 @@ async def create_session(websocket: WebSocket, host_id: int, symbol:str, id: int
     session = Session(id=id, symbol=symbol, starting_balance=starting_balance, max_clients=max_clients,
                       duration=duration, against_server=against_server, clients=[])
     await session_manager.add_session(session)
-    await session_manager.add_client((websocket, host_id))
+    await session_manager.add_client(websocket, id, host_id)
     
     session_participant = ParticipantSession(starting_balance=starting_balance, is_agent=False)
     
